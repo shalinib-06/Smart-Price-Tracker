@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Smart Price Tracker</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        font-size: 13px;
+        width: 410px;
+        min-height: 300px;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      header {
+        background: #4f46e5;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .brand { display: flex; align-items: center; gap: 8px; }
+      .brand h1 { font-size: 14px; font-weight: 700; color: #fff; }
+      #search-bar-wrap {
+        padding: 8px 12px;
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+        display: flex;
+        gap: 6px;
+      }
+      #search-input {
+        flex: 1;
+        background: #0f172a;
+        border: 1px solid #334155;
+        color: #fff;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+      }
+      .select-dropdown {
+        background: #0f172a;
+        border: 1px solid #334155;
+        color: #94a3b8;
+        padding: 6px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        cursor: pointer;
+      }
+      #status-bar {
+        padding: 6px 14px;
+        font-size: 11px;
+        color: #94a3b8;
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #items-list { list-style: none; max-height: 380px; overflow-y: auto; }
+      .item {
+        padding: 12px 14px;
+        border-bottom: 1px solid #1e293b;
+        display: grid;
+        gap: 6px;
+        transition: background 0.15s ease;
+      }
+      .item:hover { background: #1e293b; }
+      .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .item-label {
+        font-weight: 600;
+        color: #f1f5f9;
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 260px;
+      }
+      .item-price { color: #4ade80; font-size: 16px; font-weight: 700; }
+      .item-price.failed { color: #f87171; }
+      .item-target {
+        font-size: 11px;
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+      .item-meta {
+        font-size: 11px;
+        color: #64748b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .actions { display: flex; gap: 4px; align-items: center; }
+      .btn-action {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.15s ease;
+      }
+      .btn-target {
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.1);
+      }
+      .btn-target:hover { background: rgba(56, 189, 248, 0.25); }
+      .btn-graph {
+        color: #a855f7;
+        background: rgba(168, 85, 247, 0.1);
+      }
+      .btn-graph:hover { background: rgba(168, 85, 247, 0.25); }
+      .btn-delete {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+        font-weight: 700;
+      }
+      .btn-delete:hover { background: rgba(239, 68, 68, 0.25); }
+      .empty { padding: 36px 16px; text-align: center; color: #64748b; }
+      .empty p { margin-top: 8px; font-size: 12px; }
+      footer {
+        padding: 8px 14px;
+        background: #1e293b;
+        border-top: 1px solid #334155;
+        font-size: 11px;
+        color: #64748b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .tg-wrap { display: flex; align-items: center; gap: 8px; }
+      #tg-btn-disconnect {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        cursor: pointer;
+      }
+      #tg-btn-disconnect:hover { background: rgba(239, 68, 68, 0.3); }
+      .badge {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 99px;
+        font-size: 10px;
+        font-weight: 600;
+      }
+      .badge-ok { background: #166534; color: #4ade80; }
+      .badge-failed { background: #7f1d1d; color: #fca5a5; }
+      .badge-out { background: #78350f; color: #fcd34d; }
+      .badge-paused { background: #475569; color: #cbd5e1; }
+
+      /* Real Line Chart Modal */
+      #chart-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.88);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+        align-items: center;
+        justify-content: center;
+      }
+      .chart-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 16px;
+        width: 380px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      }
+      .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .chart-stats {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 11px;
+      }
+      .chart-stat-box {
+        flex: 1;
+        background: #0f172a;
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid #334155;
+      }
+      .chart-canvas {
+        background: #0b1120;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        width: 100%;
+        height: 160px;
+        display: block;
+      }
+      .chart-legend {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 10px;
+        color: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <h1>Smart Price Tracker</h1>
+      </div>
+    </header>
+    <div id="search-bar-wrap">
+      <input id="search-input" type="text" placeholder="Search watchlist..." />
+      <select id="filter-select" class="select-dropdown">
+        <option value="all">All</option>
+        <option value="in_stock">In Stock</option>
+        <option value="target">Has Target</option>
+      </select>
+      <select id="sort-select" class="select-dropdown">
+        <option value="date_desc">Newest</option>
+        <option value="date_asc">Oldest</option>
+        <option value="alpha_asc">A to Z</option>
+        <option value="alpha_desc">Z to A</option>
+        <option value="price_asc">Price: Low</option>
+        <option value="price_desc">Price: High</option>
+      </select>
+    </div>
+    <div id="status-bar">
+      <span id="status-text">Loading...</span>
+    </div>
+    <ul id="items-list"></ul>
+    <footer>
+      <span>Chrome MV3</span>
+      <div class="tg-wrap">
+        <span id="tg-status-text" style="color:#94a3b8;">Telegram</span>
+        <button id="tg-btn-connect" style="background:#4f46e5;color:#fff;border:none;padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-weight:600;">Connect Bot</button>
+        <button id="tg-btn-disconnect" style="display:none;" title="Unlink Telegram bot">Disconnect</button>
+      </div>
+    </footer>
+
+    <!-- Real Historical Price Chart Modal -->
+    <div id="chart-modal">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3 id="chart-title" style="font-size:13px;font-weight:700;color:#fff;max-width:290px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Price Trend</h3>
+          <button id="chart-close" style="background:none;border:none;color:#94a3b8;font-size:16px;cursor:pointer;">X</button>
+        </div>
+        <div class="chart-stats">
+          <div class="chart-stat-box"><span style="color:#94a3b8;">Min:</span> <b id="stat-min" style="color:#4ade80;">--</b></div>
+          <div class="chart-stat-box"><span style="color:#94a3b8;">Avg:</span> <b id="stat-avg" style="color:#38bdf8;">--</b></div>
+          <div class="chart-stat-box"><span style="color:#94a3b8;">Max:</span> <b id="stat-max" style="color:#f87171;">--</b></div>
+        </div>
+        <canvas id="chart-canvas" class="chart-canvas" width="348" height="160"></canvas>
+        <div class="chart-legend">
+          <span>Y-Axis: Price</span>
+          <span style="color:#4ade80;">&#9472; Price Curve</span>
+          <span style="color:#38bdf8;">--- Target</span>
+          <span>X-Axis: Date</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telegram QR Code Connect Modal -->
+    <div id="qr-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.92);backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:20px;width:340px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.7);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 style="font-size:14px;font-weight:700;color:#fff;">Connect Telegram Bot</h3>
+          <button id="qr-close" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;padding:0 4px;">X</button>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:12px;display:inline-block;margin-bottom:14px;">
+          <img id="qr-image" src="" alt="QR Code" style="width:180px;height:180px;display:block;" />
+        </div>
+        <p style="color:#94a3b8;font-size:11px;margin-bottom:10px;">Scan with your phone camera or Telegram app to connect @MatirxPriceBot</p>
+        <div style="display:flex;gap:8px;justify-content:center;">
+          <button id="qr-open-link" style="background:#4f46e5;color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">Open in Browser</button>
+          <button id="qr-copy-link" style="background:#334155;color:#e2e8f0;border:1px solid #475569;padding:7px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">Copy Link</button>
+        </div>
+        <p id="qr-link-text" style="color:#64748b;font-size:9px;margin-top:10px;word-break:break-all;"></p>
+      </div>
+    </div>
+
+    <script type="module" src="./index.ts"></script>
+  </body>
+</html>
