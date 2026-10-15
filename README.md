@@ -2,6 +2,15 @@
 
 A full-stack system to track product prices, detect price drops or restocks, and trigger instant alerts (Telegram / Push) alongside a Manifest V3 browser extension.
 
+## Key Features
+
+- Track product prices through a Chrome browser extension.
+- Store tracked products and price history in a PostgreSQL database.
+- Detect price drops and restocks.
+- Receive Telegram alerts for tracked products.
+- Access backend API endpoints to manage tracked items and view price history.
+- Build the extension using Vite and TypeScript.
+
 ## Monorepo Layout
 
 ```
