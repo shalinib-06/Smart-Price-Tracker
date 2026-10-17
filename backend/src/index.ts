@@ -13,6 +13,7 @@ import simulateRouter from './routes/simulate';
 import { initTelegramBot } from './notify/bot';
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = Number(process.env.PORT) || 8083;
 
 // ---- Middleware ----
